@@ -1,0 +1,699 @@
+{
+	"info": {
+		"_postman_id": "9aa125dd-83ae-4e3d-8c7c-a2310aa848b4",
+		"name": "Healthcare Action Engine Demo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23962100"
+	},
+	"item": [
+		{
+			"name": "1. Discover HAE Services (no CDS Hooks OAuth)",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services",
+					"host": [
+						"{{haeBaseURL}}"
+					],
+					"path": [
+						"csp",
+						"healthshare",
+						"{{haeNamespace}}",
+						"cds-hooks",
+						"r4",
+						"cds-services"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Hello CDS Hooks! (no FHIR Fetch, no CDS Hooks OAuth)",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"hookInstance\": \"{{$guid}}\",\r\n    \"hook\": \"patient-view\",\r\n    \"context\": {\r\n        \"userId\": \"12345\",\r\n        \"patientId\": \"100000012\",\r\n        \"encounterId\": \"123\"\r\n    }\r\n\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/EDSDemoHelloCDSHooks",
+					"host": [
+						"{{haeBaseURL}}"
+					],
+					"path": [
+						"csp",
+						"healthshare",
+						"{{haeNamespace}}",
+						"cds-hooks",
+						"r4",
+						"cds-services",
+						"EDSDemoHelloCDSHooks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Acquire OAuth Access Token for FHIR Fetch",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{fhirClientSecret}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{fhirClientID}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{fhirAuthURL}}/token?grant_type=client_credentials&username={{fhirClientID}}&password={{fhirClientSecret}}&aud={{fhirEndpoint}}",
+					"host": [
+						"{{fhirAuthURL}}"
+					],
+					"path": [
+						"token"
+					],
+					"query": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "username",
+							"value": "{{fhirClientID}}"
+						},
+						{
+							"key": "password",
+							"value": "{{fhirClientSecret}}"
+						},
+						{
+							"key": "aud",
+							"value": "{{fhirEndpoint}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Service Request (with FHIR Fetch, no CDS Hooks OAuth)",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"hookInstance\": \"{{$guid}}\",\r\n    \"hook\": \"patient-view\",\r\n    \"context\": {\r\n        \"userId\": \"12345\",\r\n        \"patientId\": \"{{patientID1}}\",\r\n        \"encounterId\": \"123\"\r\n    },\r\n    \"fhirServer\": \"{{fhirEndpoint}}\",\r\n    \"fhirAuthorization\": {\r\n        \"access_token\": \"{{fhirAccessToken}}\",\r\n        \"token_type\": \"bearer\",\r\n        \"expires_in\": 300,\r\n        \"scope\": \"user/*.read\",\r\n        \"subject\": \"{{fhirClientID}}\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/{{haeDemoRule1}}",
+					"host": [
+						"{{haeBaseURL}}"
+					],
+					"path": [
+						"csp",
+						"healthshare",
+						"{{haeNamespace}}",
+						"cds-hooks",
+						"r4",
+						"cds-services",
+						"{{haeDemoRule1}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Acquire CDS Hooks Token for Discovery Call",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true,
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{hooksClientSecret}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{hooksClientID}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/fhir+json",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{hooksAuthBaseURL}}/token?grant_type=client_credentials&username={{hooksClientID}}&password={{hooksClientSecret}}&aud={{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services",
+					"host": [
+						"{{hooksAuthBaseURL}}"
+					],
+					"path": [
+						"token"
+					],
+					"query": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "username",
+							"value": "{{hooksClientID}}"
+						},
+						{
+							"key": "password",
+							"value": "{{hooksClientSecret}}"
+						},
+						{
+							"key": "aud",
+							"value": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services",
+							"description": "audience needs to match exact string of either cdshooks discovery or service URL"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6. Rediscover HAE Services (with CDS Hooks Token)",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{hooksToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services",
+					"host": [
+						"{{haeBaseURL}}"
+					],
+					"path": [
+						"csp",
+						"healthshare",
+						"{{haeNamespace}}",
+						"cds-hooks",
+						"r4",
+						"cds-services"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "7. Acquire CDS Hooks Token for Service",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true,
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{hooksClientSecret}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{hooksClientID}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/fhir+json",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{hooksAuthBaseURL}}/token?grant_type=client_credentials&username={{hooksClientID}}&password={{hooksClientSecret}}&aud={{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/{{haeDemoRule2}}",
+					"host": [
+						"{{hooksAuthBaseURL}}"
+					],
+					"path": [
+						"token"
+					],
+					"query": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "username",
+							"value": "{{hooksClientID}}"
+						},
+						{
+							"key": "password",
+							"value": "{{hooksClientSecret}}"
+						},
+						{
+							"key": "aud",
+							"value": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/{{haeDemoRule2}}",
+							"description": "audience needs to match exact string of either cdshooks discovery or service URL"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "8. Acquire New FHIR Fetch Token (Same as 3)",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{fhirClientSecret}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{fhirClientID}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{fhirAuthURL}}/token?grant_type=client_credentials&username={{fhirClientID}}&password={{fhirClientSecret}}&aud={{fhirEndpoint}}",
+					"host": [
+						"{{fhirAuthURL}}"
+					],
+					"path": [
+						"token"
+					],
+					"query": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "username",
+							"value": "{{fhirClientID}}"
+						},
+						{
+							"key": "password",
+							"value": "{{fhirClientSecret}}"
+						},
+						{
+							"key": "aud",
+							"value": "{{fhirEndpoint}}",
+							"description": "FHIR Endpoint"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "9. Service Request (with FHIR Fetch and CDS Hooks OAuth)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{hooksToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"hookInstance\": \"{{$guid}}\",\r\n    \"hook\": \"patient-view\",\r\n    \"context\": {\r\n        \"userId\": \"12345\",\r\n        \"patientId\": \"{{patientID2}}\",\r\n        \"encounterId\": \"123\"\r\n    },\r\n        \"fhirServer\": \"{{fhirEndpoint}}\",\r\n    \"fhirAuthorization\": {\r\n        \"access_token\": \"{{fhirAccessToken}}\",\r\n        \"token_type\": \"bearer\",\r\n        \"expires_in\": 300,\r\n        \"scope\": \"user/*.read\",\r\n        \"subject\": \"{{fhirClientID}}\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/{{haeDemoRule2}}",
+					"host": [
+						"{{haeBaseURL}}"
+					],
+					"path": [
+						"csp",
+						"healthshare",
+						"{{haeNamespace}}",
+						"cds-hooks",
+						"r4",
+						"cds-services",
+						"{{haeDemoRule2}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "10. Acquire CDS Hooks Token for Prefetch Service Request",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true,
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{hooksClientSecret}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{hooksClientID}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/fhir+json",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{hooksAuthBaseURL}}/token?grant_type=client_credentials&username={{hooksClientID}}&password={{hooksClientSecret}}&aud={{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/EDSDemoAntiplateletForCAD",
+					"host": [
+						"{{hooksAuthBaseURL}}"
+					],
+					"path": [
+						"token"
+					],
+					"query": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "username",
+							"value": "{{hooksClientID}}"
+						},
+						{
+							"key": "password",
+							"value": "{{hooksClientSecret}}"
+						},
+						{
+							"key": "aud",
+							"value": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/EDSDemoAntiplateletForCAD",
+							"description": "audience needs to match exact string of either cdshooks discovery or service URL"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "11. Prefetch Service Request",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{hooksToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"hookInstance\": \"{{$guid}}\",\r\n    \"hook\": \"patient-view\",\r\n    \"context\": {\r\n        \"userId\": \"practitioner-id-goes-here\",\r\n        \"patientId\": \"patient-id-goes-here\",\r\n        \"encounterId\": \"encounter-id-goes-here\"\r\n    },\r\n    \"prefetch\": {\r\n        \"EDSDemoAntiplateletForCAD01\":\r\n        {\r\n            \"resourceType\": \"Bundle\",\r\n            \"id\": \"75147e75-fd40-47ac-a16d-f6aa412c6718\",\r\n            \"type\": \"searchset\",\r\n            \"timestamp\": \"2023-11-03T20:14:05Z\",\r\n            \"total\": 1,\r\n            \"link\": [\r\n                {\r\n                    \"relation\": \"self\",\r\n                    \"url\": \"http://yourfhirserver/fhir/r4/Condition?code=http%3A%2F%2Fhl7.org%2Ffhir%2Fsid%2Ficd-10%7CI25.1&patient=Patient%2F100000001\"\r\n                }\r\n            ],\r\n            \"entry\": [\r\n                {\r\n                    \"fullUrl\": \"http://yourfhirserver/fhir/r4/Condition/60\",\r\n                    \"resource\": {\r\n                        \"resourceType\": \"Condition\",\r\n                        \"asserter\": {\r\n                            \"reference\": \"Practitioner/45\"\r\n                        },\r\n                        \"category\": [\r\n                            {\r\n                                \"coding\": [\r\n                                    {\r\n                                        \"code\": \"encounter-diagnosis\",\r\n                                        \"display\": \"Encounter Diagnosis\",\r\n                                        \"system\": \"http://terminology.hl7.org/CodeSystem/condition-category\"\r\n                                    }\r\n                                ],\r\n                                \"text\": \"Encounter Diagnosis\"\r\n                            },\r\n                            {\r\n                                \"coding\": [\r\n                                    {\r\n                                        \"code\": \"A\",\r\n                                        \"display\": \"A\"\r\n                                    }\r\n                                ]\r\n                            }\r\n                        ],\r\n                        \"clinicalStatus\": {\r\n                            \"coding\": [\r\n                                {\r\n                                    \"code\": \"active\",\r\n                                    \"system\": \"http://terminology.hl7.org/CodeSystem/condition-clinical\"\r\n                                }\r\n                            ]\r\n                        },\r\n                        \"code\": {\r\n                            \"coding\": [\r\n                                {\r\n                                    \"code\": \"I25.1\",\r\n                                    \"display\": \"CHRONIC ISCHEMIC HEART DISEASE\",\r\n                                    \"system\": \"http://hl7.org/fhir/sid/icd-10\"\r\n                                }\r\n                            ]\r\n                        },\r\n                        \"encounter\": {\r\n                            \"reference\": \"Encounter/59\"\r\n                        },\r\n                        \"extension\": [\r\n                            {\r\n                                \"url\": \"http://intersystems.com/fhir/extn/sda3/lib/diagnosis-encounter-number\",\r\n                                \"valueString\": \"1181733-20230801\"\r\n                            },\r\n                            {\r\n                                \"url\": \"http://intersystems.com/fhir/extn/sda3/lib/diagnosis-entered-at\",\r\n                                \"valueReference\": {\r\n                                    \"reference\": \"Organization/29\"\r\n                                }\r\n                            }\r\n                        ],\r\n                        \"recordedDate\": \"2023-08-01T00:00:00-04:00\",\r\n                        \"subject\": {\r\n                            \"reference\": \"Patient/100000001\"\r\n                        },\r\n                        \"id\": \"60\",\r\n                        \"meta\": {\r\n                            \"lastUpdated\": \"2023-11-03T14:34:25Z\",\r\n                            \"versionId\": \"1\"\r\n                        }\r\n                    },\r\n                    \"search\": {\r\n                        \"mode\": \"match\"\r\n                    }\r\n                }\r\n            ]\r\n        },\r\n        \"EDSDemoAntiplateletForCAD02\":\r\n        {\r\n            \"resourceType\": \"Bundle\",\r\n            \"id\": \"ee811b0a-a220-4406-950c-cf828da59766\",\r\n            \"type\": \"searchset\",\r\n            \"timestamp\": \"2023-11-03T20:15:44Z\",\r\n            \"total\": 0,\r\n            \"link\": [\r\n                {\r\n                    \"relation\": \"self\",\r\n                    \"url\": \"http://yourfhirserver/fhir/r4/MedicationRequest?medication:Medication.code=http%3A%2F%2Fwww.nlm.nih.gov%2Fresearch%2Fumls%2Frxnorm%7C1191%2Chttp%3A%2F%2Fwww.nlm.nih.gov%2Fresearch%2Fumls%2Frxnorm%7C%2032968&status=active%2Ccompleted&subject=Patient%2F100000001\"\r\n                }\r\n            ]\r\n        },\r\n        \"EDSDemoAntiplateletForCAD03\": {\r\n            \"resourceType\": \"Bundle\",\r\n            \"id\": \"7b43540f-b97a-4bc1-900f-0aaebe8dad40\",\r\n            \"type\": \"searchset\",\r\n            \"timestamp\": \"2023-11-03T19:37:32Z\",\r\n            \"total\": 0,\r\n            \"link\": [\r\n                {\r\n                    \"relation\": \"self\",\r\n                    \"url\": \"http://yourfhirserver/fhir/r4/MedicationStatement?medication:Medication.code=http%3A%2F%2Fwww.nlm.nih.gov%2Fresearch%2Fumls%2Frxnorm%7C1191%2Chttp%3A%2F%2Fwww.nlm.nih.gov%2Fresearch%2Fumls%2Frxnorm%7C32968&status=active%2Ccompleted%2Cintended&subject=Patient%2F100000001\"\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/EDSDemoAntiplateletForCAD",
+					"host": [
+						"{{haeBaseURL}}"
+					],
+					"path": [
+						"csp",
+						"healthshare",
+						"{{haeNamespace}}",
+						"cds-hooks",
+						"r4",
+						"cds-services",
+						"EDSDemoAntiplateletForCAD"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "haeBaseURL",
+			"value": "https://<haeHostname>:<haePortNumber>/<haeInstancePrefix>",
+			"type": "string"
+		},
+		{
+			"key": "haeNamespace",
+			"value": "haeNamespace",
+			"type": "string"
+		},
+		{
+			"key": "odsNamespace",
+			"value": "odsNamespace",
+			"type": "string"
+		},
+		{
+			"key": "odsFHIRversion",
+			"value": "r4",
+			"type": "string"
+		},
+		{
+			"key": "fhirAuthURL",
+			"value": "https://<registryBaseURL>/oauth2",
+			"type": "string"
+		},
+		{
+			"key": "fhirEndpoint",
+			"value": "https://<odsBaseURL>/csp/healthshare/{{odsNamespace}}/fhir/{{odsFHIRversion}}",
+			"type": "string"
+		},
+		{
+			"key": "fhirClientID",
+			"value": "fhirClientID",
+			"type": "string"
+		},
+		{
+			"key": "fhirClientSecret",
+			"value": "fhirClientSecret",
+			"type": "string"
+		},
+		{
+			"key": "fhirAccessToken",
+			"value": "fhirAccessToken",
+			"type": "string"
+		},
+		{
+			"key": "patientID1",
+			"value": "100000006",
+			"type": "string"
+		},
+		{
+			"key": "haeDemoRule1",
+			"value": "EDSDemoElevatedINR"
+		},
+		{
+			"key": "hooksClientID",
+			"value": "hooksClientID",
+			"type": "string"
+		},
+		{
+			"key": "hooksClientSecret",
+			"value": "hooksClientSecret",
+			"type": "string"
+		},
+		{
+			"key": "hooksAuthBaseURL",
+			"value": "{{haeBaseURL}}/oauth2",
+			"type": "string"
+		},
+		{
+			"key": "hooksToken",
+			"value": "hooksToken",
+			"type": "string"
+		},
+		{
+			"key": "haeDemoRule2",
+			"value": "EDSDemoVaccineMeningococcal",
+			"type": "string"
+		},
+		{
+			"key": "patientID2",
+			"value": "100000015",
+			"type": "string"
+		}
+	]
+}
