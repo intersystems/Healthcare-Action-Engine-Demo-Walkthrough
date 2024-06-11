@@ -588,6 +588,186 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "A1. Acquire CDS Hooks Token for Order-Select Request",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true,
+				"disabledSystemHeaders": {}
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{hooksClientSecret}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{hooksClientID}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/fhir+json",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{hooksAuthBaseURL}}/token?grant_type=client_credentials&username={{hooksClientID}}&password={{hooksClientSecret}}&aud={{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/EDSDemoCiproRenalDose",
+					"host": [
+						"{{hooksAuthBaseURL}}"
+					],
+					"path": [
+						"token"
+					],
+					"query": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "username",
+							"value": "{{hooksClientID}}"
+						},
+						{
+							"key": "password",
+							"value": "{{hooksClientSecret}}"
+						},
+						{
+							"key": "aud",
+							"value": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/EDSDemoCiproRenalDose",
+							"description": "audience needs to match exact string of either cdshooks discovery or service URL"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "A2. Acquire New FHIR Fetch Token (Same as 3)",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{fhirClientSecret}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{fhirClientID}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{fhirAuthURL}}/token?grant_type=client_credentials&username={{fhirClientID}}&password={{fhirClientSecret}}&aud={{fhirEndpoint}}",
+					"host": [
+						"{{fhirAuthURL}}"
+					],
+					"path": [
+						"token"
+					],
+					"query": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials"
+						},
+						{
+							"key": "username",
+							"value": "{{fhirClientID}}"
+						},
+						{
+							"key": "password",
+							"value": "{{fhirClientSecret}}"
+						},
+						{
+							"key": "aud",
+							"value": "{{fhirEndpoint}}",
+							"description": "FHIR Endpoint"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "A3. Order-Select Request",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{hooksToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"fhirServer\": \"{{fhirEndpoint}}\",\r\n    \"fhirAuthorization\": {\r\n        \"access_token\": \"{{fhirAccessToken}}\",\r\n        \"token_type\": \"bearer\",\r\n        \"expires_in\": 300,\r\n        \"scope\": \"user/*.read\",\r\n        \"subject\": \"{{fhirClientID}}\"\r\n    },\r\n    \"hookInstance\": \"{{$guid}}\",\r\n    \"hook\": \"order-select\",\r\n    \"context\":{\r\n        \"userId\":\"12345\",\r\n        \"patientId\":\"{{orderSelectPatient}}\",\r\n        \"encounterId\":\"89284\",\r\n        \"selections\": [ \"NutritionOrder/pureeddiet-simple\", \"MedicationRequest/smart-MedicationRequest-103\" ],\r\n        \"draftOrders\":{\r\n            \"resourceType\":\"Bundle\",\r\n            \"type\": \"searchset\",\r\n            \"entry\":[\r\n                {\r\n                \"resource\":{\r\n                    \"resourceType\":\"NutritionOrder\",\r\n                    \"id\":\"pureeddiet-simple\",\r\n                    \"intent\":\"order\",\r\n                    \"identifier\":[\r\n                        {\r\n                            \"system\":\"http://goodhealthhospital.org/nutrition-requests\",\r\n                            \"value\":\"123\"\r\n                        }\r\n                    ],\r\n                    \"status\":\"draft\",\r\n                    \"patient\":{\r\n                        \"reference\":\"Patient/1288992\"\r\n                    },\r\n                    \"dateTime\":\"2014-09-17\",\r\n                    \"orderer\":{\r\n                        \"reference\":\"Practitioner/example\",\r\n                        \"display\":\"Dr Adam Careful\"\r\n                    },\r\n                    \"oralDiet\":{\r\n                        \"type\":[\r\n                            {\r\n                            \"coding\":[\r\n                                {\r\n                                    \"system\":\"http://snomed.info/sct\",\r\n                                    \"code\":\"226211001\",\r\n                                    \"display\":\"Pureed diet\"\r\n                                },\r\n                                {\r\n                                    \"system\":\"http://goodhealthhospital.org/diet-type-codes\",\r\n                                    \"code\":\"1010\",\r\n                                    \"display\":\"Pureed diet\"\r\n                                }\r\n                            ],\r\n                            \"text\":\"Pureed diet\"\r\n                            }\r\n                        ],\r\n                        \"schedule\":[\r\n                            {\r\n                            \"repeat\":{\r\n                                \"boundsPeriod\":{\r\n                                    \"start\":\"2015-02-10\"\r\n                                },\r\n                                \"frequency\":3,\r\n                                \"period\":1,\r\n                                \"periodUnit\":\"d\"\r\n                            }\r\n                            }\r\n                        ],\r\n                        \"texture\":[\r\n                            {\r\n                            \"modifier\":{\r\n                                \"coding\":[\r\n                                    {\r\n                                        \"system\":\"http://snomed.info/sct\",\r\n                                        \"code\":\"228055009\",\r\n                                        \"display\":\"Liquidized food\"\r\n                                    }\r\n                                ],\r\n                                \"text\":\"Pureed\"\r\n                            }\r\n                            }\r\n                        ],\r\n                        \"fluidConsistencyType\":[\r\n                            {\r\n                            \"coding\":[\r\n                                {\r\n                                    \"system\":\"http://snomed.info/sct\",\r\n                                    \"code\":\"439021000124105\",\r\n                                    \"display\":\"Dietary liquid consistency - nectar thick liquid\"\r\n                                }\r\n                            ],\r\n                            \"text\":\"Nectar thick liquids\"\r\n                            }\r\n                        ]\r\n                    },\r\n                    \"supplement\":[\r\n                        {\r\n                            \"type\":{\r\n                            \"coding\":[\r\n                                {\r\n                                    \"system\":\"http://snomed.info/sct\",\r\n                                    \"code\":\"442971000124100\",\r\n                                    \"display\":\"Adult high energy formula\"\r\n                                },\r\n                                {\r\n                                    \"system\":\"http://goodhealthhospital.org/supplement-type-codes\",\r\n                                    \"code\":\"1040\",\r\n                                    \"display\":\"Adult high energy pudding\"\r\n                                }\r\n                            ],\r\n                            \"text\":\"Adult high energy pudding\"\r\n                            },\r\n                            \"productName\":\"Ensure Pudding 4 oz container\",\r\n                            \"instruction\":\"Ensure Pudding at breakfast, lunch, supper\"\r\n                        }\r\n                    ]\r\n                }\r\n                },\r\n                {\r\n                \"resource\":{\r\n                    \"resourceType\":\"MedicationRequest\",\r\n                    \"id\":\"smart-MedicationRequest-103\",\r\n                    \"meta\":{\r\n                        \"lastUpdated\":\"2018-04-30T13:25:40.845-04:00\"\r\n                    },\r\n                    \"text\":{\r\n                        \"status\":\"generated\",\r\n                        \"div\":\"<div xmlns=\\\"http://www.w3.org/1999/xhtml\\\">Ciprofloxacin 250 MG Oral Tablet</div>\"\r\n                    },\r\n                    \"status\":\"draft\",\r\n                    \"intent\":\"order\",\r\n                    \"medicationCodeableConcept\":{\r\n                        \"coding\":[\r\n                            {\r\n                            \"system\":\"RxNorm\",\r\n                            \"code\":\"205769\",\r\n                            \"display\":\"Ciprofloxacin 250 MG Oral Tablet\"\r\n                            }\r\n                        ],\r\n                        \"text\":\"Ciprofloxacin 250 MG Oral Tablet\"\r\n                    },\r\n                    \"subject\":{\r\n                        \"reference\":\"Patient/1288992\"\r\n                    },\r\n                    \"dosageInstruction\":[\r\n                        {\r\n                            \"text\":\"5 mL bid x 10 days\",\r\n                            \"timing\":{\r\n                            \"repeat\":{\r\n                                \"boundsPeriod\":{\r\n                                    \"start\":\"2005-01-04\"\r\n                                },\r\n                                \"frequency\":2,\r\n                                \"period\":1,\r\n                                \"periodUnit\":\"d\"\r\n                            }\r\n                            },\r\n                            \"doseAndRate\":[{\r\n                            \"doseQuantity\":{\r\n                                \"value\":40,\r\n                                \"unit\":\"mL\",\r\n                                \"system\":\"http://unitsofmeasure.org\",\r\n                                \"code\":\"ml/min\"\r\n                            }\r\n                            }]\r\n                        }\r\n                    ],\r\n                    \"dispenseRequest\":{\r\n                        \"numberOfRepeatsAllowed\":1,\r\n                        \"quantity\":{\r\n                            \"value\":40,\r\n                            \"unit\":\"ml\",\r\n                            \"system\":\"http://unitsofmeasure.org\",\r\n                            \"code\":\"ml/min\"\r\n                        },\r\n                        \"expectedSupplyDuration\":{\r\n                            \"value\":10,\r\n                            \"unit\":\"days\",\r\n                            \"system\":\"http://unitsofmeasure.org\",\r\n                            \"code\":\"d\"\r\n                        }\r\n                    }\r\n                }\r\n                }\r\n            ]\r\n        }\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{haeBaseURL}}/csp/healthshare/{{haeNamespace}}/cds-hooks/r4/cds-services/EDSDemoCiproRenalDose",
+					"host": [
+						"{{haeBaseURL}}"
+					],
+					"path": [
+						"csp",
+						"healthshare",
+						"{{haeNamespace}}",
+						"cds-hooks",
+						"r4",
+						"cds-services",
+						"EDSDemoCiproRenalDose"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"event": [
@@ -693,6 +873,11 @@
 		{
 			"key": "patientID2",
 			"value": "100000015",
+			"type": "string"
+		},
+		{
+			"key": "orderSelectPatient",
+			"value": "100000017",
 			"type": "string"
 		}
 	]
